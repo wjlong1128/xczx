@@ -1,0 +1,57 @@
+package com.wjl.xczx.content.course.model.vo;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
+
+import java.io.Serializable;
+import java.util.List;
+
+/*
+ * @author Wang Jianlong
+ * @version 1.0.0
+ * @date 2023/4/15
+ * @description
+ */
+@Data
+public class CourseCategoryTreeVO implements Serializable {
+
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<CourseCategoryTreeVO> childrenTreeNodes;
+
+
+    /**
+     * 主键
+     */
+    private String id;
+
+    /**
+     * 分类名称
+     */
+    private String name;
+
+    /**
+     * 分类标签默认和名称一样
+     */
+    private String label;
+
+    /**
+     * 父结点id（第一级的父节点是0，自关联字段id）
+     */
+    private String parentid;
+
+    /**
+     * 是否显示
+     */
+    private Integer isShow;
+
+    /**
+     * 排序字段
+     */
+    private Integer orderby;
+
+    /**
+     * 是否叶子
+     */
+    private Integer isLeaf;
+}

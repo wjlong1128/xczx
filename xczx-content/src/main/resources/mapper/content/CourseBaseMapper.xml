@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wjl.xczx.content.course.mapper.CourseBaseMapper">
+
+    <sql id="all">
+        id,
+        company_id,
+        company_name,
+        name,
+        users,
+        tags,
+        mt,
+        st,
+        grade,
+        teachmode,
+        description,
+        pic,
+        create_date,
+        change_date,
+        create_people,
+        change_people,
+        audit_status,
+        status
+    </sql>
+    <resultMap id="courseMap" type="com.wjl.xczx.content.course.model.entity.CourseBase">
+        <id column="id" property="id"/>
+        <result column="company_id" property="companyId"/>
+        <result column="company_name" property="companyName"/>
+        <result column="create_date" property="createDate"/>
+        <result column="change_date" property="changeDate"/>
+        <result column="create_people" property="createPeople"/>
+        <result column="audit_status" property="auditStatus"/>
+    </resultMap>
+
+    <select id="queryCourseWithCondition" resultMap="courseMap">
+        select
+        <include refid="all"/> from course_base
+        <where>
+            <if test="params.auditStatus != null and params.auditStatus != ''">
+                audit_status = #{params.auditStatus}
+            </if>
+            <if test="params.courseName != null and params.courseName != ''">
+               and name like concat('%',concat(#{params.courseName},'%'))
+            </if>
+            <if test="params.publishStatus != null and params.publishStatus != ''">
+              and  status =  #{params.publishStatus}
+            </if>
+        </where>
+    </select>
+
+</mapper>

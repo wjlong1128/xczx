@@ -1,0 +1,49 @@
+server:
+  port: 80
+spring:
+  application:
+    name: xczx-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: dev
+        group: xczx
+    gateway:
+      globalcors:
+        # 解决options请求被拦截问题
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          # 这里是转义 /**
+          '[/**]':
+            allowedOrigins:
+              - http://localhost:8601
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTION
+            allowedHeaders: '*'
+            # 允许cookie
+            allowCredentials: true
+            # 此次跨域有效期
+            maxAge: 360000
+
+      routes:
+        - id: content-api
+          uri: lb://content-api
+          predicates:
+            - Path=/content/**
+        - id: system-api
+          uri: lb://system-api
+          predicates:
+            - Path=/system/**
+        - id: media-api
+          uri: lb://media-api
+          predicates:
+            - Path=/media/**
+        - id: bili
+          uri: https://www.bilibili.com
+          predicates:
+            - Path=/video/**

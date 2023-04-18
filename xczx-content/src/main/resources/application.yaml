@@ -1,0 +1,18 @@
+#server:
+#  port: 63040
+#  servlet:
+#    context-path: /content
+#spring:
+#  jackson:
+#    date-format: yyyy-MM-dd HH:mm:ss
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/xczx-content
+#    password: root
+#    username: root
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#mybatis-plus:
+#  mapper-locations: classpath:mapper/content/*.xml
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+##logging:
+#  config: classpath:log4j2-dev.xml

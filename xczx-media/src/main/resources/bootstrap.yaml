@@ -1,0 +1,63 @@
+server:
+  port: 63050
+  servlet:
+    context-path: /media
+
+media:
+  ffmpeg:
+    path: "D:/softwares/unzip/ffmpeg-2023-04-12-git-1179bb703e-full_build/bin/ffmpeg.exe"
+    filetypes: 'video/x-msvideo'
+  thread-pool:
+    core: 10
+    max: 12
+    keep-alive-time: 60
+    queue-size: 1024
+spring:
+  application:
+    name: media-api
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+  datasource:
+    url: jdbc:mysql://localhost:3306/xczx-media
+    password: root
+    username: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  cloud:
+    nacos:
+      discovery:
+        group: xczx
+        namespace: dev
+        server-addr: localhost:8848
+  servlet:
+    multipart:
+      # 总和
+      max-request-size: 10MB
+      # 单个
+      max-file-size: 10MB
+mybatis-plus:
+  mapper-locations: classpath:mapper/media/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+minio:
+  url: http://localhost:9000
+  bucket:
+    files: xczx-media
+    videofiles: xczx-media
+  access-key: IzJd4x6kXaRDKuJm
+  secret-key: edJEDlPzSBHw1AbHO2Cu5YohlmL1Iy1H
+logging:
+  level:
+    root: info
+xxl:
+  job:
+    admin:
+      addresses: http://localhost:8080/xxl-job-admin
+    executor:
+      appname: ${spring.application.name}
+      logpath: /data/applogs/xxl-job/jobhandler
+      address:
+      logretentiondays: 30
+      ip:
+      port: 9998
+    accessToken: default_token

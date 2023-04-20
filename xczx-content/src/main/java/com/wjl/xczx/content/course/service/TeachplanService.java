@@ -28,14 +28,14 @@ public interface TeachplanService extends IService<Teachplan> {
      * @param addTeachplanDTO
      * @return
      */
-    Result<Object> addOrUpdate(AddTeachplanDTO addTeachplanDTO);
+    Result<Object> addOrUpdate(Long companyId,AddTeachplanDTO addTeachplanDTO);
 
     /**
      *  删除章节，并且删除子章节
      * @param id
      * @return
      */
-    Result<Object> deleteById(Long id);
+    Result<Object> deleteById(Long companyId,Long id);
 
     /**
      *  获取排序
@@ -49,18 +49,18 @@ public interface TeachplanService extends IService<Teachplan> {
      * @param id
      * @return
      */
-    Result<Object> moveup(Long id);
+    Result<Object> moveup(Long companyId,Long id);
 
     /**
      *  下移
      * @param id
      * @return
      */
-    Result<Object> movedown(Long id);
+    Result<Object> movedown(Long companyId,Long id);
 
     /**
      *  根据课程id删除 课程计划与相关媒资
      * @param courseId
      */
-    void deleteTeachplanAndMediaByCourseId(Long courseId);
+    void deleteTeachplanAndMediaByCourseId(Long companyId,Long courseId);
 }

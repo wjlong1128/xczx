@@ -2,8 +2,8 @@ package com.wjl.xczx.content.course.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.wjl.xczx.common.consts.XczxConstant;
 import com.wjl.xczx.common.exception.Assert;
-import com.wjl.xczx.content.course.consts.CourseConstant;
 import com.wjl.xczx.content.course.exception.CourseException;
 import com.wjl.xczx.content.course.exception.state.CourseStateEnum;
 import com.wjl.xczx.content.course.mapper.CourseMarketMapper;
@@ -31,7 +31,7 @@ public class CourseMarketServiceImpl extends ServiceImpl<CourseMarketMapper, Cou
         Assert.isTrue(!StringUtils.isEmpty(charge), () -> new CourseException(CourseStateEnum.CHARGE_ERROR));
 
         // 课程收费 价格错误也将添加失败
-        if (CourseConstant.ChargeModel.TOLL.getCode().equals(charge)) {
+        if (XczxConstant.ChargeModel.TOLL.getCode().equals(charge)) {
             boolean b = courseMarket.getPrice() == null || courseMarket.getPrice().compareTo(new BigDecimal("0")) != 1;
             Assert.isTrue(!StringUtils.isEmpty(charge), () -> new CourseException(CourseStateEnum.PRICE_ERROR));
         }

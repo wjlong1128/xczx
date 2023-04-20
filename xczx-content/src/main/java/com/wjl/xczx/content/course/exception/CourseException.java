@@ -21,4 +21,8 @@ public class CourseException extends CommonException {
     public CourseException(State status) {
         super(status);
     }
+
+    public CourseException(Throwable cause, State status) {
+        super(cause, status);
+    }
 }

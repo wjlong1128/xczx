@@ -18,7 +18,73 @@ spring:
         group: xczx
         namespace: dev
         server-addr: localhost:8848
+    sentinel:
+#      transport:
+#        port: 8719
+#        dashboard: localhost:8080
+      enabled: true
+      # 指定是否统一 Web 上下文（即使用默认上下文名称），并且默认为 true。 根节点问题
+      # 设置为false 这个配置是让每一个controller有一个自己的root节点 链路模式必备
+      web-context-unify: false
+    openfeign:
+      # https://docs.spring.io/spring-cloud-openfeign/docs/current/reference/html/appendix.html
+      # 断路器
+      circuitbreaker:
+        enabled: true
+      client:
+        config:
+          default:
+            connect-timeout: 60000
+            read-timeout: 60000
+      httpclient:
+        enabled: true # 开启连接池
+        max-connections: 200 # 最大连接数
+        max-connections-per-route: 50 #每个路径的最大连接数
+       #  sentinel 集成问题 https://github.com/alibaba/spring-cloud-alibaba/issues/3024
+      lazy-attributes-resolution: true
+    loadbalancer:
+      health-check:
+        refetch-instances: true
+#        refetch-instances-interval: 5s
+        repeat-health-check: false
+      nacos:
+        enabled: true
+      cache:
+        enabled: false
+#      service-discovery:
+#        timeout:
+      retry:
+        # 开启重试
+        enabled: true
+        # 当前实例重试次数
+        max-retries-on-same-service-instance: 0
+        # 切换实例的重试次数
+        max-retries-on-next-service-instance: 1
+
+  freemarker:
+    enabled: true
+    charset: UTF-8
+    cache: false
+    suffix: .ftl
+    template-loader-path: classpath:/templates/
+feign:
+  
+  sentinel:
+    enabled: true
 mybatis-plus:
   mapper-locations: classpath:mapper/content/*.xml
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+xxl:
+  job:
+    admin:
+      addresses: http://localhost:8080/xxl-job-admin
+    executor:
+      appname: ${spring.application.name}
+      logpath: /data/applogs/xxl-job/jobhandler
+      address:
+      logretentiondays: 30
+      ip:
+      port: 9999
+    accessToken: default_token
+

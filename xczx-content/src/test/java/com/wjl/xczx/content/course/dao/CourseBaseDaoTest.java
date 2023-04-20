@@ -45,9 +45,9 @@ public class CourseBaseDaoTest {
     @Test
     void queryCourseWithCondition() {
         QueryCourseParamsDTO params = new QueryCourseParamsDTO();
-        params.setCourseName("JAVA");
+        //params.setCourseName("JAVA");
         params.setPublishStatus("203001");
-        List<CourseBase> list = mapper.queryCourseWithCondition(params, new Page(1, 5)).getRecords();
+        List<CourseBase> list = mapper.queryCourseWithCondition(117L,params, new Page(1, 5)).getRecords();
         Assert.notNull(list,"集合不能为空");
         System.out.println(list.size());
         for (CourseBase courseBase : list) {

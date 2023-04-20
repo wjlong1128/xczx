@@ -41,7 +41,8 @@ public class MediaVideoProcessService {
     private String ffmpegPath;
 
     /**
-     * 2、分片广播任务
+     * 1. 数据库乐观锁防止多次执行任务，转码占用内存大
+     * 2. 线程池处理
      */
     @XxlJob("mediaProcessHandler")
     public void mediaProcessHandler() throws Exception {

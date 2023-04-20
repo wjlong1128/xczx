@@ -38,8 +38,9 @@
         select
         <include refid="all"/> from course_base
         <where>
+            and company_id = #{companyId}
             <if test="params.auditStatus != null and params.auditStatus != ''">
-                audit_status = #{params.auditStatus}
+                and audit_status = #{params.auditStatus}
             </if>
             <if test="params.courseName != null and params.courseName != ''">
                and name like concat('%',concat(#{params.courseName},'%'))

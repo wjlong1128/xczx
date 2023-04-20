@@ -15,7 +15,7 @@ public class QueryMediaParamsDTO implements Serializable {
 
     private String filename;
 
-    private String fileType;
+    private String type;
 
     private String auditStatus;
 

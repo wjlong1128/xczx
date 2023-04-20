@@ -46,6 +46,7 @@ minio:
     videofiles: xczx-media
   access-key: IzJd4x6kXaRDKuJm
   secret-key: edJEDlPzSBHw1AbHO2Cu5YohlmL1Iy1H
+
 logging:
   level:
     root: info

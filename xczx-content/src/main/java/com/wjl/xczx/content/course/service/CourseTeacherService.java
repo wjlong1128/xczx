@@ -20,14 +20,14 @@ public interface CourseTeacherService extends IService<CourseTeacher> {
      * @param courseId
      * @return
      */
-    Result<List<TeacherVO>> listByCourseId(Long courseId);
+    Result<List<TeacherVO>> listByCourseId(Long companyId,Long courseId);
 
     /**
      *  保存或者修改
      * @param teacherDTO
      * @return
      */
-    Result<TeacherVO> saveTeacher(TeacherDTO teacherDTO);
+    Result<TeacherVO> saveTeacher(Long companyId,TeacherDTO teacherDTO);
 
     /**
      *  删除课程中的教师
@@ -35,5 +35,13 @@ public interface CourseTeacherService extends IService<CourseTeacher> {
      * @param teacherId
      * @return
      */
-    Result<Object> deleteByCourseId(Long courseId, Long teacherId);
+    Result<Object> deleteByCourseId(Long companyId,Long courseId, Long teacherId);
+
+
+    /**
+     *  针对客户端的师资信息
+     * @param courseId
+     * @return
+     */
+    List<TeacherVO> courseTeacher(Long courseId);
 }

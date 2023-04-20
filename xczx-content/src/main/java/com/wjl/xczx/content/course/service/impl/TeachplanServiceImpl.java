@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wjl.xczx.common.exception.Assert;
 import com.wjl.xczx.common.result.Result;
+import com.wjl.xczx.common.result.status.StateEnum;
 import com.wjl.xczx.content.course.exception.CourseException;
 import com.wjl.xczx.content.course.exception.state.CourseStateEnum;
 import com.wjl.xczx.content.course.mapper.TeachplanMapper;
@@ -35,15 +36,19 @@ public class TeachplanServiceImpl extends ServiceImpl<TeachplanMapper, Teachplan
 
     private final TeachplanMediaService teachplanMediaService;
 
+
+
     @Override
     public Result<List<TeachplanVO>> treeNodes(Long courseId) {
+        //Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         List<TeachplanVO> teachplanVOList = this.baseMapper.getTeachplanVOsByCourseId(courseId);
         return Result.success(teachplanVOList);
     }
 
     @Transactional
     @Override
-    public Result<Object> addOrUpdate(AddTeachplanDTO addTeachplanDTO) {
+    public Result<Object> addOrUpdate(Long companyId,AddTeachplanDTO addTeachplanDTO) {
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         Long id = addTeachplanDTO.getId();
         if (id == null) {
             Teachplan entity = new Teachplan();
@@ -64,7 +69,8 @@ public class TeachplanServiceImpl extends ServiceImpl<TeachplanMapper, Teachplan
 
     @Transactional
     @Override
-    public Result<Object> deleteById(Long id) {
+    public Result<Object> deleteById(Long companyId,Long id) {
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         Boolean delete = this.baseMapper.deleteTeachplanAndChild(id);
         Assert.isTrue(Boolean.TRUE.equals(delete), () -> new CourseException(CourseStateEnum.TECH_DELETE_ERROR));
         return Result.okMessage("删除成功");
@@ -83,7 +89,8 @@ public class TeachplanServiceImpl extends ServiceImpl<TeachplanMapper, Teachplan
      */
     @Transactional
     @Override
-    public Result<Object> moveup(Long id) {
+    public Result<Object> moveup(Long companyId,Long id) {
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         Teachplan teachplan = getById(id);
         Integer orderby = teachplan.getOrderby();
         Optional<Teachplan> beforeOption = this.baseMapper.beforeOrderBy(orderby, teachplan.getParentid());
@@ -110,7 +117,8 @@ public class TeachplanServiceImpl extends ServiceImpl<TeachplanMapper, Teachplan
      */
     @Transactional
     @Override
-    public Result<Object> movedown(Long id) {
+    public Result<Object> movedown(Long companyId,Long id) {
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         Teachplan current = getById(id);
         int order = getOrder(current.getParentid());
         // 已经是最后面了
@@ -130,7 +138,8 @@ public class TeachplanServiceImpl extends ServiceImpl<TeachplanMapper, Teachplan
 
     @Transactional
     @Override
-    public void deleteTeachplanAndMediaByCourseId(Long courseId) {
+    public void deleteTeachplanAndMediaByCourseId(Long companyId,Long courseId) {
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         List<Long> ids = this.baseMapper.getTeachplanIdsByCourseId(courseId);
         if(CollectionUtils.isEmpty(ids)){
             return;
@@ -139,7 +148,7 @@ public class TeachplanServiceImpl extends ServiceImpl<TeachplanMapper, Teachplan
         boolean remove = removeBatchByIds(ids);
         // Assert.isTrue(remove,()-> new CourseException(CourseStateEnum.DEL_TEACH_BATCH_BY_COURSE_ERROR));
 
-        // 根据
+        // 根据 课程计划id删除对应的媒资
         teachplanMediaService.deleteByTeachPlanIds(ids);
     }
 }

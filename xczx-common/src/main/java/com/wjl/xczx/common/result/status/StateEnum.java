@@ -13,7 +13,7 @@ public enum StateEnum implements State {
     SUCCESS(200,"success"),
     UN_KNOW_EX(500,"系统出问题了，请稍后再试"),
     REQUEST_PARAMETERS_ERROR(400,"参数出错"),
-    ;
+    NOT_AUTHENTICATION(401,"请登录后访问" );
     private int code;
     private String message;
 

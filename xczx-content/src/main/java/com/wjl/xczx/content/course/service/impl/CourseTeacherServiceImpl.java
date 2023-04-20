@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wjl.xczx.common.exception.Assert;
 import com.wjl.xczx.common.result.Result;
+import com.wjl.xczx.common.result.status.StateEnum;
 import com.wjl.xczx.content.course.exception.CourseException;
 import com.wjl.xczx.content.course.exception.state.CourseStateEnum;
 import com.wjl.xczx.content.course.mapper.CourseTeacherMapper;
@@ -27,19 +28,27 @@ import java.util.stream.Collectors;
 @Service
 public class CourseTeacherServiceImpl extends ServiceImpl<CourseTeacherMapper, CourseTeacher> implements CourseTeacherService {
     @Override
-    public Result<List<TeacherVO>> listByCourseId(Long courseId) {
+    public Result<List<TeacherVO>> listByCourseId(Long companyId,Long courseId) {
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
+        Assert.notNull(courseId,()-> new CourseException(CourseStateEnum.QUERY_ERROR));
+        List<TeacherVO> voList = getTeacherVOS(courseId);
+        return Result.success(voList);
+    }
+
+    private List<TeacherVO> getTeacherVOS(Long courseId) {
         List<CourseTeacher> list = this.list(new LambdaQueryWrapper<CourseTeacher>().eq(CourseTeacher::getCourseId, courseId));
         List<TeacherVO> voList = list.stream().map(item -> {
             TeacherVO teacherVO = new TeacherVO();
             BeanUtils.copyProperties(item, teacherVO);
             return teacherVO;
         }).collect(Collectors.toList());
-        return Result.success(voList);
+        return voList;
     }
 
     @Transactional
     @Override
-    public Result<TeacherVO> saveTeacher(TeacherDTO teacherDTO) {
+    public Result<TeacherVO> saveTeacher(Long companyId,TeacherDTO teacherDTO) {
+       Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         if(teacherDTO.getId() != null){
             CourseTeacher teacher = new CourseTeacher();
             BeanUtils.copyProperties(teacherDTO,teacher);
@@ -61,9 +70,16 @@ public class CourseTeacherServiceImpl extends ServiceImpl<CourseTeacherMapper, C
     }
 
     @Override
-    public Result<Object> deleteByCourseId(Long courseId, Long teacherId) {
+    public Result<Object> deleteByCourseId(Long companyId,Long courseId, Long teacherId) {
+         Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         boolean remove = this.remove(new LambdaQueryWrapper<CourseTeacher>().eq(CourseTeacher::getCourseId, courseId).eq(CourseTeacher::getId, teacherId));
         Assert.isTrue(remove,()-> new CourseException(CourseStateEnum.DEL_TEACHER_ERROR));
         return Result.success();
+    }
+
+    @Override
+    public List<TeacherVO> courseTeacher(Long courseId) {
+        List<TeacherVO> voList = getTeacherVOS(courseId);
+        return voList;
     }
 }

@@ -27,7 +27,14 @@ public enum CourseStateEnum implements State {
     DEL_COURSE_ERROR(40014, "删除课程失败"),
     DEL_MARKET_ERROR(40015, "删除营销信息失败"),
     DEL_TEACH_BATCH_BY_COURSE_ERROR(40015, "根据课程批量删除课程计划失败"), 
-    DEL_BATCH_BY_TEACH_ERROR(40016,"根据课程计划删除媒资信息失败" );
+    DEL_BATCH_BY_TEACH_ERROR(40016,"根据课程计划删除媒资信息失败" ),
+    TECH_QUERY_NOT_NULL_ERROR(40017, "课程计划不能为空"),
+    REPEAT_COMMIT_ERROR(40017,"课程已经提交,请等待"),
+    PIC_NOT_NULL(40017,"请上传课程图片"),
+    COURSE_TEAC_NOT_NULL(40017,"请上传课程计划"),
+    UNDER_REVIEW(40017,"课程审核中" ),
+    COURSE_NOT_AUDIT(40018,"课程没有审核记录" ),
+    UPLOAD_HTML_ERROR(40018,"上传静态界面异常");
 
     CourseStateEnum(int code, String message) {
         this.code = code;

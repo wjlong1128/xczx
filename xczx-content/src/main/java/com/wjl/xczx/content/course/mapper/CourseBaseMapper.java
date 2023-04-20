@@ -22,6 +22,6 @@ public interface CourseBaseMapper extends BaseMapper<CourseBase> {
      * @param page
      * @return
      */
-    IPage<CourseBase> queryCourseWithCondition(@Param("params") QueryCourseParamsDTO params, IPage page);
+    IPage<CourseBase> queryCourseWithCondition(@Param("companyId") Long companyId,@Param("params") QueryCourseParamsDTO params, IPage page);
 
 }

@@ -4,11 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.wjl.xczx.common.consts.XczxConstant;
 import com.wjl.xczx.common.exception.Assert;
 import com.wjl.xczx.common.result.PageResult;
 import com.wjl.xczx.common.result.Result;
+import com.wjl.xczx.common.result.status.StateEnum;
 import com.wjl.xczx.common.vo.PageParams;
-import com.wjl.xczx.content.course.consts.CourseConstant;
 import com.wjl.xczx.content.course.exception.CourseException;
 import com.wjl.xczx.content.course.exception.state.CourseStateEnum;
 import com.wjl.xczx.content.course.mapper.CourseBaseMapper;
@@ -54,13 +55,16 @@ public class CourseBaseServiceImpl extends ServiceImpl<CourseBaseMapper, CourseB
     private final TeachplanService teachplanService;
 
     @Override
-    public Result<PageResult<CourseVO>> queryCourseWithCondition(PageParams params, QueryCourseParamsDTO queryCourseParamsDTO) {
+    public Result<PageResult<CourseVO>> queryCourseWithCondition(Long companyId,PageParams params, QueryCourseParamsDTO queryCourseParamsDTO) {
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         IPage<CourseBase> page;
         Page<CourseBase> pageParam = new Page<>(params.getPageNo().longValue(), params.getPageSize().longValue());
         if (!ObjectUtils.isEmpty(queryCourseParamsDTO)) {
-            page = courseBaseMapper.queryCourseWithCondition(queryCourseParamsDTO, pageParam);
+            page = courseBaseMapper.queryCourseWithCondition(companyId, queryCourseParamsDTO, pageParam);
         } else {
-            page = courseBaseMapper.selectPage(pageParam, null);
+            LambdaQueryWrapper<CourseBase> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(CourseBase::getCompanyId,companyId);
+            page = courseBaseMapper.selectPage(pageParam, wrapper);
         }
         List<CourseVO> courseVOList = page.getRecords().stream().map(item -> {
             CourseVO vo = new CourseVO();
@@ -73,14 +77,13 @@ public class CourseBaseServiceImpl extends ServiceImpl<CourseBaseMapper, CourseB
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public Result<CourseInfoVO> addCourse(AddCourseDTO addCourseDTO) {
-        // TODO: 获取机构ID
-        Long companyId = 117L;
+    public Result<CourseInfoVO> addCourse(Long companyId,AddCourseDTO addCourseDTO) {
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         CourseBase newCourse = new CourseBase();
         newCourse.setCompanyId(companyId);
         BeanUtils.copyProperties(addCourseDTO, newCourse);
-        newCourse.setStatus(CourseConstant.PublishStatus.NOT.getCode());
-        newCourse.setAuditStatus(CourseConstant.AuditStatus.NOT_COMMIT.getCode());
+        newCourse.setStatus(XczxConstant.PublishStatus.NOT.getCode());
+        newCourse.setAuditStatus(XczxConstant.AuditStatus.NOT_COMMIT.getCode());
         boolean save = save(newCourse);
         Assert.isTrue(save, () -> new CourseException(CourseStateEnum.ADD_ERROR));
 
@@ -89,13 +92,19 @@ public class CourseBaseServiceImpl extends ServiceImpl<CourseBaseMapper, CourseB
         BeanUtils.copyProperties(addCourseDTO, courseMarket);
         courseMarket.setId(newCourseId);
         courseMarketService.saveNewMartket(courseMarket);
-        CourseInfoVO data = getCourseInfoVO(newCourseId);
+        CourseInfoVO data = getCourseInfoVO(companyId,newCourseId);
         return Result.success(data);
     }
 
-    private CourseInfoVO getCourseInfoVO(Long newCourseId) {
+    private CourseInfoVO getCourseInfoVO(Long companyId,Long newCourseId) {
         CourseInfoVO data = new CourseInfoVO();
-        CourseBase courseBase = this.getById(newCourseId);
+        LambdaQueryWrapper<CourseBase> wrapper = new LambdaQueryWrapper<>();
+        if (companyId != null){ // 区分机构端和客户端
+            wrapper.eq(CourseBase::getCompanyId,companyId);
+        }
+
+        wrapper.eq(CourseBase::getId,newCourseId);
+        CourseBase courseBase = this.getOne(wrapper);
         CourseMarket courseMarket = courseMarketService.getById(newCourseId);
         Assert.isTrue(courseBase != null && courseMarket != null, () -> new CourseException(CourseStateEnum.QUERY_ERROR));
         BeanUtils.copyProperties(courseBase, data);
@@ -104,21 +113,21 @@ public class CourseBaseServiceImpl extends ServiceImpl<CourseBaseMapper, CourseB
         String mtName = courseCategoryService.getCategoryNameById(data.getMt());
         data.setMtName(mtName);
         String stName = courseCategoryService.getCategoryNameById(data.getSt());
-        data.setStatus(stName);
+        data.setStName(stName);
         return data;
     }
 
     @Override
-    public Result<CourseInfoVO> getCourseById(Long courseId) {
-        CourseInfoVO courseInfoVO = getCourseInfoVO(courseId);
+    public Result<CourseInfoVO> getCourseById(Long companyId,Long courseId) {
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
+        CourseInfoVO courseInfoVO = getCourseInfoVO(companyId,courseId);
         return Result.success(courseInfoVO);
     }
 
     @Transactional
     @Override
     public Result<CourseInfoVO> editCourse(Long companyId, EditCourseDTO editCourseDTO) {
-        // TODO: 获取机构ID
-        companyId = 1232141425L;
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         CourseBase courseBase = getById(editCourseDTO.getId());
         CourseMarket market = courseMarketService.getById(editCourseDTO.getId());
         Assert.notNull(courseBase, () -> new CourseException(EDIT_ERROR));
@@ -135,20 +144,23 @@ public class CourseBaseServiceImpl extends ServiceImpl<CourseBaseMapper, CourseB
         Assert.isTrue(update, () -> new CourseException(EDIT_ERROR));
         courseMarketService.saveNewMartket(market);
 
-        CourseInfoVO infoVO = getCourseInfoVO(courseBase.getId());
+        CourseInfoVO infoVO = getCourseInfoVO(companyId,courseBase.getId());
         return Result.success(infoVO);
     }
 
     @Transactional
     @Override
-    public Result<Object> deleteCourse(Long courseId) {
+    public Result<Object> deleteCourse(Long companyId,Long courseId) {
+        Assert.notNull(companyId,()-> new CourseException(StateEnum.NOT_AUTHENTICATION));
         CourseBase courseBase = getById(courseId);
         Assert.notNull(courseBase,()-> new CourseException(CourseStateEnum.NOT_DEL_COURSE));
         String auditStatus = courseBase.getAuditStatus();
-        if(!CourseConstant.AuditStatus.NOT_COMMIT.getCode().equals(auditStatus)){
+        if(!XczxConstant.AuditStatus.NOT_COMMIT.getCode().equals(auditStatus)){
             throw  new CourseException(CourseStateEnum.DEL_COURSE_STATE_ERROR);
         }
-        boolean remove = removeById(courseId);
+        LambdaQueryWrapper<CourseBase> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CourseBase::getCompanyId,companyId).eq(CourseBase::getId,courseId);
+        boolean remove = remove(wrapper);
         Assert.isTrue(remove,()-> new CourseException(CourseStateEnum.DEL_COURSE_ERROR));
 
         // 删除相关营销信息
@@ -156,7 +168,13 @@ public class CourseBaseServiceImpl extends ServiceImpl<CourseBaseMapper, CourseB
         // Assert.isTrue(remove,()-> new CourseException(CourseStateEnum.DEL_MARKET_ERROR));
 
         // 删除课程计划
-        teachplanService.deleteTeachplanAndMediaByCourseId(courseId);
+        teachplanService.deleteTeachplanAndMediaByCourseId(companyId,courseId);
         return Result.success();
+    }
+
+
+    @Override
+    public CourseInfoVO getCourseById(Long courseId) {
+        return getCourseInfoVO(null,courseId);
     }
 }

@@ -2,6 +2,7 @@ package com.wjl.xczx.media.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.wjl.xczx.common.result.PageResult;
+import com.wjl.xczx.common.result.RestResponse;
 import com.wjl.xczx.common.result.Result;
 import com.wjl.xczx.common.vo.PageParams;
 import com.wjl.xczx.media.model.dto.QueryMediaParamsDTO;
@@ -35,7 +36,7 @@ public interface MediaFileService extends IService<MediaFile> {
      * @param companyId
      * @return
      */
-    Result<MediaFileVO> uploadImageFile(Long companyId, MultipartFile file);
+    Result<MediaFileVO> uploadFile(Long companyId, MultipartFile file,String objectName,String tags);
 
 
     /**
@@ -87,4 +88,8 @@ public interface MediaFileService extends IService<MediaFile> {
      * @return
      */
     MediaFileVO saveMediaFileInfo(Long companyId, MediaFile mediaFile, String type);
+
+    Result deleteFileById(Long companyId, String fileId);
+
+    RestResponse<String> getFileUrl(String mediaId);
 }

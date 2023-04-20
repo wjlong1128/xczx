@@ -9,14 +9,12 @@ import java.time.LocalDateTime;
 /*
  * @author Wang Jianlong
  * @version 1.0.0
- * @date 2023/4/15
+ * @date 2023/4/18
  * @description
  */
 @Data
 @TableName("teachplan_media")
 public class TeachplanMedia implements Serializable {
-
-    private static final long serialVersionUID = 1L;
 
     /**
      * 主键
@@ -57,6 +55,4 @@ public class TeachplanMedia implements Serializable {
      * 修改人
      */
     private String changePeople;
-
-
 }

@@ -25,21 +25,23 @@ public interface CourseBaseService  extends IService<CourseBase> {
      * @param queryCourseParamsDTO
      * @return
      */
-    Result<PageResult<CourseVO>> queryCourseWithCondition(PageParams params, QueryCourseParamsDTO queryCourseParamsDTO);
+    Result<PageResult<CourseVO>> queryCourseWithCondition(
+            Long companyId,
+            PageParams params, QueryCourseParamsDTO queryCourseParamsDTO);
 
     /**
      *  新增课程
      * @param addCourseDTO
      * @return 返回课程信息
      */
-    Result<CourseInfoVO> addCourse(AddCourseDTO addCourseDTO);
+    Result<CourseInfoVO> addCourse(Long companyId,AddCourseDTO addCourseDTO);
 
     /**
      *  查询课程信息
      * @param courseId
      * @return
      */
-    Result<CourseInfoVO> getCourseById(Long courseId);
+    Result<CourseInfoVO> getCourseById(Long companyId,Long courseId);
 
     /**
      *  修改课程信息
@@ -48,5 +50,21 @@ public interface CourseBaseService  extends IService<CourseBase> {
      */
     Result<CourseInfoVO> editCourse(Long companyId,EditCourseDTO editCourseDTO);
 
-    Result<Object> deleteCourse(Long courseId);
+    /**
+     *  删除课程
+     * @param companyId
+     * @param courseId
+     * @return
+     */
+    Result<Object> deleteCourse(Long companyId,Long courseId);
+
+
+    /**
+     *  针对于用户端的查看基本信息
+     * @param courseId
+     * @return
+     */
+    CourseInfoVO getCourseById(Long courseId);
+
+
 }

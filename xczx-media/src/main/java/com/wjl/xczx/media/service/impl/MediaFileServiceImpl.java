@@ -3,9 +3,12 @@ package com.wjl.xczx.media.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.wjl.xczx.common.consts.XczxConstant;
 import com.wjl.xczx.common.exception.Assert;
 import com.wjl.xczx.common.result.PageResult;
+import com.wjl.xczx.common.result.RestResponse;
 import com.wjl.xczx.common.result.Result;
+import com.wjl.xczx.common.result.status.StateEnum;
 import com.wjl.xczx.common.vo.PageParams;
 import com.wjl.xczx.media.config.minio.MinIoProperties;
 import com.wjl.xczx.media.exception.MediaException;
@@ -14,10 +17,12 @@ import com.wjl.xczx.media.mapper.MediaFileMapper;
 import com.wjl.xczx.media.model.dto.QueryMediaParamsDTO;
 import com.wjl.xczx.media.model.entity.MediaFile;
 import com.wjl.xczx.media.model.entity.MediaProcess;
+import com.wjl.xczx.media.model.entity.RemoveFile;
 import com.wjl.xczx.media.model.vo.MediaFileVO;
 import com.wjl.xczx.media.service.MediaFileService;
 import com.wjl.xczx.media.service.MediaProcessService;
 import com.wjl.xczx.media.service.MinioService;
+import com.wjl.xczx.media.service.RemoveFileService;
 import com.wjl.xczx.media.utils.MediaFileUtils;
 import com.wjl.xczx.media.utils.MimeTypeUtils;
 import lombok.RequiredArgsConstructor;
@@ -61,29 +66,38 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
 
     private final ThreadPoolExecutor mediaThreadPoolExecutor;
 
+    private final RemoveFileService removeFileService;
+
     @Lazy
     @Autowired
     private MediaProcessService processService;
     @Lazy
     @Autowired
-    private MediaFileService proxyMediaFileService;
+    private MediaFileService proxyMediaFileService; // 可以在自带方法中使用AopContext.currentProxy()
 
     @Value("#{'${media.ffmpeg.filetypes}'.split(',')}")
     private List<String> types;
 
 
+
+
     @Override
     public Result<PageResult<MediaFileVO>> queryMediaFiles(Long companyId, PageParams pageParams, QueryMediaParamsDTO queryMediaParamsDTO) {
-        Assert.notNull(companyId, () -> new MediaException(MediaStateEnum.COMPANY_ID_NULL_ERROR));
+        Assert.notNull(companyId, () -> new MediaException(StateEnum.NOT_AUTHENTICATION));
         LambdaQueryWrapper<MediaFile> wrapper = new LambdaQueryWrapper<>();
         // 组装查询条件
         if (queryMediaParamsDTO != null) {
-            String fileType = queryMediaParamsDTO.getFileType();
+            String fileType = queryMediaParamsDTO.getType();
             String auditStatus = queryMediaParamsDTO.getAuditStatus();
             String filename = queryMediaParamsDTO.getFilename();
+            wrapper.eq(MediaFile::getCompanyId, companyId);
             wrapper.eq(StringUtils.hasText(fileType), MediaFile::getFileType, fileType);
             wrapper.eq(StringUtils.hasText(auditStatus), MediaFile::getAuditStatus, auditStatus);
-            wrapper.like(StringUtils.hasText(filename), MediaFile::getFilename, filename);
+            if (StringUtils.hasText(filename)) {
+                wrapper.and(w -> {
+                    w.like(MediaFile::getFilename, filename);
+                });
+            }
         }
         Page<MediaFile> page = page(new Page<>(pageParams.getPageNo(), pageParams.getPageSize()), wrapper);
         PageResult<MediaFileVO> data = new PageResult<>();
@@ -95,14 +109,13 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
             BeanUtils.copyProperties(item, vo);
             return vo;
         }).collect(Collectors.toList());
-
         data.setItems(items);
         return Result.success(data);
     }
 
     // @Transactional  // 这里的事务粒度太大 io流事件占用资源时间长 可能会数据库连接不够用
     @Override
-    public Result<MediaFileVO> uploadImageFile(Long companyId, MultipartFile file) {
+    public Result<MediaFileVO> uploadFile(Long companyId, MultipartFile file,String objectName,String tag) {
         Assert.notNull(companyId, () -> new MediaException(MediaStateEnum.COMPANY_ID_NULL_ERROR));
         // 保存临时文件 计算md5
         String originalFilename = file.getOriginalFilename();
@@ -127,7 +140,9 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
         String bucket = properties.getBucket().getFiles();
         String contentType = file.getContentType();
         String suffix = MediaFileUtils.suffix(originalFilename);
-        String objectName = MediaFileUtils.getDatePathFileName(md5 + suffix);
+        if ( objectName == null ){
+             objectName = MediaFileUtils.getDatePathFileName(md5 + suffix);
+        }
         // 不存在 上传
         minioService.uploadFile(bucket, contentType, objectName, temp);
         mediaFile = new MediaFile();
@@ -135,13 +150,20 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
         mediaFile.setBucket(bucket);
         mediaFile.setCompanyId(companyId);
         mediaFile.setFilename(originalFilename);
-        mediaFile.setTags("课程图片");
+        String type = MediaFile.IMG;
+        if (tag == null ){
+            mediaFile.setTags("课程图片");
+        }else{
+            mediaFile.setTags(tag);
+            type = MediaFile.OTHER;
+        }
         mediaFile.setFilePath(objectName);
         mediaFile.setFileId(md5);
         mediaFile.setUrl("/" + bucket + "/" + objectName);
         mediaFile.setFileSize(temp.length());
+
         // 防止事务失效
-        MediaFileVO mediaFileVO = proxyMediaFileService.saveMediaFileInfo(companyId, mediaFile, MediaFile.IMG);
+        MediaFileVO mediaFileVO = proxyMediaFileService.saveMediaFileInfo(companyId, mediaFile, type);
         return Result.success(mediaFileVO);
     }
 
@@ -195,6 +217,7 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
 
     @Override
     public Result mergeChunks(Long companyId, String fileMd5, String fileName, Integer chunkTotal) {
+        Assert.notNull(companyId, () -> new MediaException(MediaStateEnum.COMPANY_ID_NULL_ERROR));
         // 1. 文件路径
         String path = getMd5Floder(fileMd5);
         // 2. 分块文件路径
@@ -218,6 +241,8 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
         mediaFile.setBucket(bucket);
         mediaFile.setFileId(fileMd5);
         mediaFile.setTags("视频文件");
+        // [{\"code\":\"002001\",\"desc\":\"审核未通过\"},{\"code\":\"002002\",\"desc\":\"未审核\"},{\"code\":\"002003\",\"desc\":\"审核通过\"}]"
+        mediaFile.setAuditStatus(XczxConstant.ObjectAuditStatus.NOT_AUDITED.getCode());
         proxyMediaFileService.saveMediaVideoAndClearChunk(chunkTotal, chunkFilePath, bucket, mediaFile);
         return Result.success();
     }
@@ -230,7 +255,8 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
 
     @Transactional
     public MediaFileVO saveMediaFileInfo(Long companyId, MediaFile mediaFile, String type) {
-        mediaFile.setAuditStatus("02003");
+        // [{\"code\":\"002001\",\"desc\":\"审核未通过\"},{\"code\":\"002002\",\"desc\":\"未审核\"},{\"code\":\"002003\",\"desc\":\"审核通过\"}]"
+        mediaFile.setAuditStatus(XczxConstant.ObjectAuditStatus.NOT_AUDITED.getCode());
         mediaFile.setStatus("1");
         mediaFile.setCompanyId(companyId);
         mediaFile.setFileType(type);
@@ -239,6 +265,28 @@ public class MediaFileServiceImpl extends ServiceImpl<MediaFileMapper, MediaFile
         MediaFileVO mediaFileVO = new MediaFileVO();
         BeanUtils.copyProperties(mediaFile, mediaFileVO);
         return mediaFileVO;
+    }
+
+    @Transactional
+    @Override
+    public Result deleteFileById(Long companyId, String fileId) {
+        Assert.notNull(companyId, () -> new MediaException(MediaStateEnum.COMPANY_ID_NULL_ERROR));
+        LambdaQueryWrapper<MediaFile> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MediaFile::getCompanyId,companyId).eq(MediaFile::getId,fileId);
+        MediaFile mediaFile = getOne(wrapper);
+        RemoveFile removeFile = new RemoveFile();
+        BeanUtils.copyProperties(mediaFile,removeFile);
+        removeFile.setRec("1");
+        removeFileService.save(removeFile);
+        remove(wrapper);
+        return Result.success();
+    }
+
+    @Override
+    public RestResponse<String> getFileUrl(String mediaId) {
+        MediaFile file = getById(mediaId);
+        Assert.notNull(file,()-> new MediaException(MediaStateEnum.FILE_NOT_FOUNT));
+        return RestResponse.success(file.getUrl());
     }
 
 

@@ -1,6 +1,8 @@
 package com.wjl.xczx.content.course.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.wjl.xczx.common.result.Result;
+import com.wjl.xczx.content.course.model.dto.BindTeachPlanMediaDTO;
 import com.wjl.xczx.content.course.model.entity.TeachplanMedia;
 
 import java.util.List;
@@ -17,4 +19,18 @@ public interface TeachplanMediaService extends IService<TeachplanMedia> {
      * @param ids
      */
     void deleteByTeachPlanIds(List<Long> ids);
+
+    /**
+     *  绑定课程计划与媒资
+     * @param bindTeachPlanMediaDTO
+     */
+    void associationMedia(BindTeachPlanMediaDTO bindTeachPlanMediaDTO);
+
+    /**
+     *  接触绑定
+     * @param teachplanId
+     * @param mediaId
+     * @return
+     */
+    Result unAssociationMedia(Long teachplanId, String mediaId);
 }

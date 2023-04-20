@@ -15,7 +15,11 @@
         <module>xczx-gateway</module>
         <module>xczx-service-base</module>
         <module>xczx-media</module>
+        <module>xczx-message-sdk</module>
         <module>xxl-job</module>
+        <module>demo</module>
+        <module>xczx-feign</module>
+        <module>xczx-auth</module>
     </modules>
 
     <properties>
@@ -34,11 +38,14 @@
         <okhttp.version>4.10.0</okhttp.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <commons-lang.version>2.6</commons-lang.version>
+        <commons-io>2.11.0</commons-io>
         <servlet-api.version>6.0.0</servlet-api.version>
         <guava.version>31.1-jre</guava.version>
         <g-zxing.version>3.5.1</g-zxing.version>
         <fastjson.version>2.0.28</fastjson.version>
         <xxl-job.version>2.4.1-SNAPSHOT</xxl-job.version>
+        <feign-http.version>12.2</feign-http.version>
+        <file-upload.version>1.5</file-upload.version>
     </properties>
 
     <dependencyManagement>
@@ -85,6 +92,13 @@
                 <artifactId>commons-lang3</artifactId>
                 <version>${commons-lang3.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io}</version>
+            </dependency>
+
             <dependency>
                 <groupId>io.minio</groupId>
                 <artifactId>minio</artifactId>
@@ -128,6 +142,19 @@
                 <artifactId>xxl-job-core</artifactId>
                 <version>${xxl-job.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>io.github.openfeign</groupId>
+                <artifactId>feign-httpclient</artifactId>
+                <version>${feign-http.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload -->
+            <dependency>
+                <groupId>commons-fileupload</groupId>
+                <artifactId>commons-fileupload</artifactId>
+                <version>${file-upload.version}</version>
+            </dependency>
+
         </dependencies>
 
     </dependencyManagement>
